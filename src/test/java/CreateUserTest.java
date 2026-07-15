@@ -6,6 +6,7 @@ import io.qameta.allure.junit4.DisplayName;
 import model.User;
 import org.junit.Test;
 import steps.UserSteps;
+import io.restassured.response.Response;
 
 import static org.hamcrest.Matchers.*;
 import static org.apache.http.HttpStatus.*;
@@ -21,9 +22,15 @@ public class CreateUserTest extends BaseApiTest{
     public void createUniqueUserTest() {
         // Создаём пользователя через UserSteps
         User user = UserSteps.createUniqueUser();
+        // 1. Отправляем запрос и сохраняем весь ответ в переменную response
+        Response response = UserSteps.registerUser(user);
 
-        UserSteps.registerUser(user)
-                .then()
+        // 2. Достаем токен и сохраняем его в переменную accessToken из BaseApiTest
+        accessToken = UserSteps.getAccessToken(response);
+
+
+        // 3. Делаем проверки на самом ответе
+        response.then()
                 .statusCode(SC_OK )
                 .body("success", equalTo(true))
                 .body("user.email", equalTo(user.getEmail().toLowerCase()))
@@ -37,9 +44,12 @@ public class CreateUserTest extends BaseApiTest{
     @Description("Проверка ошибки при попытке создать существующего пользователя с уже существующим email")
     public void createAlreadyRegisteredUserTest() {
         User user = UserSteps.createUniqueUser();
-        UserSteps.registerUser(user); // первый раз
+        // 1. Регистрируем в первый раз и СРАЗУ сохраняем токен, чтобы после теста гарантированно удалить этого юзера
+        Response firstResponse = UserSteps.registerUser(user);
+        accessToken = UserSteps.getAccessToken(firstResponse);
 
-        UserSteps.registerUser(user) // второй раз
+        // 2. Пытаемся зарегистрировать его же второй раз
+        UserSteps.registerUser(user)
                 .then()
                 .statusCode(SC_FORBIDDEN)
                 .body("success", equalTo(false))

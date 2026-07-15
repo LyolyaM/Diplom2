@@ -42,7 +42,7 @@ public class OrderTest extends BaseApiTest {
         UserSteps.registerUser(user);
 
         // 2. Логинимся и получаем accessToken
-        String accessToken = UserSteps.loginUser(user)
+        accessToken = UserSteps.loginUser(user)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -61,7 +61,7 @@ public class OrderTest extends BaseApiTest {
                 .body("name", notNullValue());
     }
 
-    //  Создание заказа без авторизации
+    //  Создание заказа без авторизации, здесь очистка не нужна
 
     @Test
     @Story("Создание заказа")
@@ -89,7 +89,7 @@ public class OrderTest extends BaseApiTest {
         User user = UserSteps.createUniqueUser();
         UserSteps.registerUser(user);
 
-        String accessToken = UserSteps.loginUser(user)
+        accessToken = UserSteps.loginUser(user)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -112,7 +112,7 @@ public class OrderTest extends BaseApiTest {
         User user = UserSteps.createUniqueUser();
         UserSteps.registerUser(user);
 
-        String accessToken = UserSteps.loginUser(user)
+        accessToken = UserSteps.loginUser(user)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -135,7 +135,7 @@ public class OrderTest extends BaseApiTest {
         User user = UserSteps.createUniqueUser();
         UserSteps.registerUser(user);
 
-        String accessToken = UserSteps.loginUser(user)
+        accessToken = UserSteps.loginUser(user)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
