@@ -4,6 +4,7 @@ import data.Urls;
 import io.restassured.response.Response;
 import model.User;
 import data.TestData;
+import io.qameta.allure.Step;
 
 
 import java.util.Locale;
@@ -15,7 +16,7 @@ public class UserSteps {
 
 
     // ============ API-запросы ============
-
+    @Step("Зарегистрировать пользователя")
     public static Response registerUser(User user) {
         return given()
                 .header("Content-Type", "application/json")
@@ -23,7 +24,7 @@ public class UserSteps {
                 .when()
                 .post(Urls.REGISTER);
     }
-
+    @Step("Авторизовать пользователя")
     public static Response loginUser(User user) {
         return given()
                 .header("Content-Type", "application/json")
@@ -31,7 +32,7 @@ public class UserSteps {
                 .when()
                 .post(Urls.LOGIN);
     }
-
+    @Step("Обновить данные пользователя")
     public static Response updateUser(String accessToken, User user) {
         return given()
                 .header("Content-Type", "application/json")
@@ -40,14 +41,14 @@ public class UserSteps {
                 .when()
                 .patch(Urls.USER);
     }
-
+    @Step("Получить данные текущего пользователя")
     public static Response getUser(String accessToken) {
         return given()
                 .header("Authorization", accessToken)
                 .when()
                 .get(Urls.USER);
     }
-
+    @Step("Выйти из системы (деавторизация)")
     public static Response logoutUser(String refreshToken) {
         return given()
                 .header("Content-Type", "application/json")
@@ -55,7 +56,7 @@ public class UserSteps {
                 .when()
                 .post(Urls.LOGOUT);
     }
-
+    @Step("Удалить пользователя")
     public static Response deleteUser(String accessToken) {
         return given()
                 .header("Authorization", accessToken)
@@ -64,19 +65,19 @@ public class UserSteps {
     }
 
     // ============ Создание тестовых данных ============
-
+    @Step("Создать данные уникального пользователя")
     public static User createUniqueUser() {
         return TestData.createUniqueUser();
     }
-
+    @Step("Создать данные пользователя без Email")
     public static User createUserWithoutEmail() {
         return TestData.createUserWithoutEmail();
     }
-
+    @Step("Создать данные пользователя без пароля")
     public static User createUserWithoutPassword() {
         return TestData.createUserWithoutPassword();
     }
-
+    @Step("Создать данные пользователя без имени")
     public static User createUserWithoutName() {
         return TestData.createUserWithoutName();
     }

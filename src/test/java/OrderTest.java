@@ -4,9 +4,9 @@ import model.User;
 import org.junit.Test;
 import steps.OrderSteps;
 import steps.UserSteps;
-
+import org.junit.Before;
 import java.util.List;
-
+import io.restassured.response.Response;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.*;
 
@@ -14,6 +14,18 @@ import static org.hamcrest.Matchers.*;
 @Feature("Создание заказа")
 
 public class OrderTest extends BaseApiTest {
+    @Before
+    @Override
+    public void setUp() {
+        super.setUp(); // Настраиваем RestAssured из BaseApiTest
+
+        // Создаем, регистрируем пользователя и логинимся, чтобы получить accessToken для тестов
+        createdUser = UserSteps.createUniqueUser();
+        UserSteps.registerUser(createdUser);
+
+        Response loginResponse = UserSteps.loginUser(createdUser);
+        accessToken = UserSteps.getAccessToken(loginResponse);
+    }
 
     // Получение ингредиентов
 
@@ -37,21 +49,11 @@ public class OrderTest extends BaseApiTest {
     @DisplayName("Создание заказа с авторизацией и ингредиентами")
     @Description("Проверка успешного создания заказа авторизованным пользователем")
     public void createOrderWithAuthTest() {
-        // 1. Создаём и регистрируем пользователя
-        User user = UserSteps.createUniqueUser();
-        UserSteps.registerUser(user);
 
-        // 2. Логинимся и получаем accessToken
-        accessToken = UserSteps.loginUser(user)
-                .then()
-                .statusCode(SC_OK)
-                .extract()
-                .path("accessToken");
-
-        // 3. Получаем два валидных ID ингредиентов
+        //  Получаем два валидных ID ингредиентов
         List<String> ingredients = OrderSteps.getTwoValidIngredientIds();
 
-        // 4. Создаём заказ
+        //  Создаём заказ,с токеном, полученным в setUp()
         OrderSteps.createOrder(accessToken, ingredients)
                 .then()
                 .log().all()
@@ -86,14 +88,6 @@ public class OrderTest extends BaseApiTest {
     @DisplayName("Создание заказа без ингредиентов")
     @Description("Проверка ошибки при создании заказа без ингредиентов")
     public void createOrderWithoutIngredientsTest() {
-        User user = UserSteps.createUniqueUser();
-        UserSteps.registerUser(user);
-
-        accessToken = UserSteps.loginUser(user)
-                .then()
-                .statusCode(SC_OK)
-                .extract()
-                .path("accessToken");
 
         OrderSteps.createOrderWithoutIngredients(accessToken)
                 .then()
@@ -109,14 +103,6 @@ public class OrderTest extends BaseApiTest {
     @DisplayName("Создание заказа с неверным хешем ингредиентов")
     @Description("Проверка ошибки при создании заказа с невалидным хешем ингредиента")
     public void createOrderWithInvalidHashTest() {
-        User user = UserSteps.createUniqueUser();
-        UserSteps.registerUser(user);
-
-        accessToken = UserSteps.loginUser(user)
-                .then()
-                .statusCode(SC_OK)
-                .extract()
-                .path("accessToken");
 
         OrderSteps.createOrderWithInvalidHash(accessToken)
                 .then()
@@ -132,14 +118,6 @@ public class OrderTest extends BaseApiTest {
     @DisplayName("Создание заказа с одним ингредиентом")
     @Description("Проверка создания заказа с одним ингредиентом")
     public void createOrderWithOneIngredientTest() {
-        User user = UserSteps.createUniqueUser();
-        UserSteps.registerUser(user);
-
-        accessToken = UserSteps.loginUser(user)
-                .then()
-                .statusCode(SC_OK)
-                .extract()
-                .path("accessToken");
 
         List<String> ingredients = OrderSteps.getValidIngredientIds();
         List<String> oneIngredient = ingredients.subList(0, 1);

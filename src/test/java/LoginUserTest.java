@@ -7,7 +7,7 @@ import model.User;
 import org.junit.Test;
 import steps.UserSteps;
 import io.restassured.response.Response;
-
+import org.junit.Before;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.*;
 
@@ -15,27 +15,32 @@ import static org.hamcrest.Matchers.*;
 @Feature("Авторизация пользователя")
 
 public class LoginUserTest extends BaseApiTest{
+    @Before
+    @Override
+    public void setUp() {
+        super.setUp(); // Вызываем настройку RestAssured из BaseApiTest
+
+        // Регистрируем пользователя для тестов и сохраняем его в переменные базового класса
+        createdUser = UserSteps.createUniqueUser();
+        Response registerResponse = UserSteps.registerUser(createdUser);
+        accessToken = UserSteps.getAccessToken(registerResponse);
+    }
+
     @Test
     @Story("Вход в систему")
     @DisplayName("Вход под существующим пользователем")
     @Description("Проверка успешной авторизации зарегистрированного пользователя")
     public void loginExistingUserTest() {
-        User user = UserSteps.createUniqueUser();
-
-        // 1. Регистрируем пользователя и СРАЗУ перехватываем токен для последующего удаления в tearDown()
-        Response registerResponse = UserSteps.registerUser(user);
-        accessToken = UserSteps.getAccessToken(registerResponse);
-
-        // 2. Логинимся
-        UserSteps.loginUser(user)
+        // Используем созданного в setUp() пользователя createdUser
+        UserSteps.loginUser(createdUser)
                 .then()
                 .log().all()
                 .statusCode(SC_OK)
                 .body("success", equalTo(true))
                 .body("accessToken", notNullValue())
                 .body("refreshToken", notNullValue())
-                .body("user.email", equalTo(user.getEmail().toLowerCase()))
-                .body("user.name", equalTo(user.getName()));
+                .body("user.email", equalTo(createdUser.getEmail().toLowerCase()))
+                .body("user.name", equalTo(createdUser.getName()));
     }
 
 
@@ -44,14 +49,8 @@ public class LoginUserTest extends BaseApiTest{
     @DisplayName("Вход с неверным паролем")
     @Description("Проверка ошибки при входе с неправильным паролем")
     public void loginWithWrongPasswordTest() {
-        User user = UserSteps.createUniqueUser();
-
-        // Регистрируем и сохраняем токен для очистки базы
-        Response registerResponse = UserSteps.registerUser(user);
-        accessToken = UserSteps.getAccessToken(registerResponse);
-        // 2. Логинимся с НЕПРАВИЛЬНЫМ паролем
         User wrongUser = User.builder()
-                .email(user.getEmail())
+                .email(createdUser.getEmail())
                 .password("wrongPassword123")
                 .build();
 
@@ -68,15 +67,9 @@ public class LoginUserTest extends BaseApiTest{
     @DisplayName("Вход с неверным логином")
     @Description("Проверка ошибки при входе с неправильным email")
     public void loginWithWrongEmailTest() {
-        User user = UserSteps.createUniqueUser();
-
-        // Регистрируем и сохраняем токен для очистки базы
-        Response registerResponse = UserSteps.registerUser(user);
-        accessToken = UserSteps.getAccessToken(registerResponse);
-        // 2. Логинимся с НЕПРАВИЛЬНЫМ email
         User wrongUser = User.builder()
                 .email("wrong@email.com")
-                .password(user.getPassword())
+                .password(createdUser.getPassword())
                 .build();
 
         UserSteps.loginUser(wrongUser)
@@ -111,13 +104,8 @@ public class LoginUserTest extends BaseApiTest{
     @DisplayName("Вход без пароля")
     @Description("Проверка ошибки при входе без пароля")
     public void loginWithoutPasswordTest() {
-        User user = UserSteps.createUniqueUser();
-        // Регистрируем и сохраняем токен для очистки базы
-        Response registerResponse = UserSteps.registerUser(user);
-        accessToken = UserSteps.getAccessToken(registerResponse);
-
         User wrongUser = User.builder()
-                .email(user.getEmail())
+                .email(createdUser.getEmail())
                 .build();  // без пароля
 
         UserSteps.loginUser(wrongUser)
@@ -133,13 +121,8 @@ public class LoginUserTest extends BaseApiTest{
     @DisplayName("Вход без email")
     @Description("Проверка ошибки при входе без email")
     public void loginWithoutEmailTest() {
-        User user = UserSteps.createUniqueUser();
-        // Регистрируем и сохраняем токен для очистки базы
-        Response registerResponse = UserSteps.registerUser(user);
-        accessToken = UserSteps.getAccessToken(registerResponse);
-
         User wrongUser = User.builder()
-                .password(user.getPassword())
+                .password(createdUser.getPassword())
                 .build();  //  без email
 
         UserSteps.loginUser(wrongUser)
